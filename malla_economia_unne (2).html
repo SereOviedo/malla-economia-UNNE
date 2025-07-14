@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MALLA INTERACTIVA - ECONOMÍA UNNE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #e0f7fa;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      text-align: center;
+      color: #0d47a1;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    .year {
+      grid-column: span 5;
+      font-weight: bold;
+      margin-top: 20px;
+      background: #b3e5fc;
+      padding: 5px;
+      border-radius: 10px;
+    }
+    .subject {
+      background: #ffffff;
+      padding: 10px;
+      border-radius: 10px;
+      border-left: 5px solid transparent;
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+    .subject.regularizada {
+      border-left-color: green;
+      background: #d0f8ce;
+    }
+    .subject.aprobada {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+    .subject:hover .info {
+      display: block;
+    }
+    .info {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 5px;
+      font-size: 12px;
+      z-index: 1;
+      width: 200px;
+    }
+    .buttons {
+      text-align: center;
+      margin: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: none;
+      background-color: #0d47a1;
+      color: white;
+      font-weight: bold;
+    }
+    .mermaid {
+      background: white;
+      padding: 20px;
+      border: 1px solid #ccc;
+      margin-top: 30px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>LICENCIATURA EN ECONOMÍA - UNNE</h1>
+  <div class="buttons">
+    <button onclick="setMode('aprobada')">Marcar como Aprobada</button>
+    <button onclick="setMode('regularizada')">Marcar como Regularizada</button>
+    <button onclick="setMode('clear')">Quitar Marca</button>
+    <button onclick="saveProgress()">Guardar</button>
+    <button onclick="loadProgress()">Cargar</button>
+    <button onclick="exportToPDF()">Exportar a PDF</button>
+  </div>
+  <div class="grid" id="malla"></div>
+
+  <div class="mermaid">
+    graph TD;
+      A1[Álgebra] --> A2[Cálculo];
+      A2 --> B1[Economía Matemática];
+      B1 --> C1[Microeconomía Avanzada];
+      B1 --> C2[Econometría];
+      A1 --> B2[Estadística];
+      B2 --> C2;
+      B2 --> C3[Inferencia Estadística];
+      C3 --> C2;
+      A3[Fund. Contabilidad] --> B3[Contabilidad para Gestión];
+      A4[Fund. Economía] --> B4[Microeconomía Básica];
+      B4 --> B5[Macroeconomía Básica];
+      B5 --> C4[Macroeconomía Avanzada];
+      C1 --> D1[Economía Internacional];
+      D1 --> E1[Desarrollo Económico];
+      C4 --> D2[Historia Política Argentina];
+      D2 --> E1;
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true });
+
+    const listaMaterias = [
+      [1, "Álgebra y Geometría Analítica", "1er cuatrimestre"],
+      [1, "Fundamentos de Administración", "1er cuatrimestre"],
+      [1, "Fundamentos de Contabilidad", "1er cuatrimestre"],
+      [1, "Fundamentos de Economía", "1er cuatrimestre"],
+      [1, "Cálculo Diferencial e Integral", "2do cuatrimestre"],
+      [1, "Fundamentos de Derecho Civil y Comercial", "2do cuatrimestre"],
+      [1, "Metodología de las Ciencias Sociales", "2do cuatrimestre"],
+      [2, "Economía Matemática", "1er cuatrimestre"],
+      [2, "Introducción a la Estadística", "1er cuatrimestre"],
+      [2, "Microeconomía Básica", "1er cuatrimestre"],
+      [2, "Macroeconomía Básica", "2do cuatrimestre"],
+      [2, "Contabilidad para la Gestión", "2do cuatrimestre"],
+      [2, "Derecho Empresario", "2do cuatrimestre"],
+      [2, "Derecho Público", "2do cuatrimestre"],
+      [2, "Cuentas Nacionales y Estructura Económica", "2do cuatrimestre"],
+      [3, "Inferencia Estadística", "1er cuatrimestre"],
+      [3, "Microeconomía Avanzada", "1er cuatrimestre"],
+      [3, "(Seminario) Escritura Científica", "1er cuatrimestre"],
+      [3, "Optativa y/o Seminario", "2do cuatrimestre"],
+      [3, "Finanzas Públicas", "2do cuatrimestre"],
+      [3, "Historia Económica", "2do cuatrimestre"],
+      [3, "Matemática Financiera", "2do cuatrimestre"],
+      [3, "Administración Financiera", "2do cuatrimestre"],
+      [4, "Econometría", "1er cuatrimestre"],
+      [4, "Historia del Pensamiento Económico", "1er cuatrimestre"],
+      [4, "Sociología Económica", "1er cuatrimestre"],
+      [4, "Optativa y/o Seminario", "2do cuatrimestre"],
+      [4, "Economía Internacional", "2do cuatrimestre"],
+      [4, "Macroeconomía Avanzada", "2do cuatrimestre"],
+      [4, "(Seminario) Enfoques Investigativos", "2do cuatrimestre"],
+      [5, "Economía Agroindustrial", "1er cuatrimestre"],
+      [5, "Economía del Sector Público", "1er cuatrimestre"],
+      [5, "Formulación y Evaluación de Proyectos", "1er cuatrimestre"],
+      [5, "Tópicos de Microeconomía", "1er cuatrimestre"],
+      [5, "Desarrollo Económico", "2do cuatrimestre"],
+      [5, "Economía Monetaria", "2do cuatrimestre"],
+      [5, "Historia Política Económica y Social Argentina", "2do cuatrimestre"],
+      [5, "Práctica Profesional", "2do cuatrimestre"],
+      [5, "(Seminario) Producciones Escritas", "2do cuatrimestre"]
+    ];
+
+    let modo = "aprobada";
+
+    function setMode(nuevoModo) {
+      modo = nuevoModo;
+    }
+
+    function renderMalla() {
+      const container = document.getElementById("malla");
+      container.innerHTML = "";
+      let currentYear = 0;
+
+      listaMaterias.forEach(([año, nombre, periodo], index) => {
+        if (año !== currentYear) {
+          const yearDiv = document.createElement("div");
+          yearDiv.className = "year";
+          yearDiv.textContent = `${año}° Año`;
+          container.appendChild(yearDiv);
+          currentYear = año;
+        }
+
+        const div = document.createElement("div");
+        div.className = "subject";
+        div.dataset.index = index;
+        div.innerHTML = `${nombre}<div class='info'>${periodo}</div>`;
+        div.onclick = () => {
+          div.classList.remove("aprobada", "regularizada");
+          if (modo === "aprobada") div.classList.add("aprobada");
+          if (modo === "regularizada") div.classList.add("regularizada");
+        };
+        container.appendChild(div);
+      });
+    }
+
+    function saveProgress() {
+      const subjects = document.querySelectorAll(".subject");
+      const estados = Array.from(subjects).map(s => {
+        return {
+          estado: s.classList.contains("aprobada") ? "A" :
+                  s.classList.contains("regularizada") ? "R" : "N"
+        };
+      });
+      localStorage.setItem("mallaEconomiaUNNE", JSON.stringify(estados));
+      alert("Progreso guardado");
+    }
+
+    function loadProgress() {
+      const saved = JSON.parse(localStorage.getItem("mallaEconomiaUNNE"));
+      if (!saved) return;
+      const subjects = document.querySelectorAll(".subject");
+      subjects.forEach((s, i) => {
+        s.classList.remove("aprobada", "regularizada");
+        if (saved[i].estado === "A") s.classList.add("aprobada");
+        if (saved[i].estado === "R") s.classList.add("regularizada");
+      });
+    }
+
+    function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("Malla de Lic. en Economía - UNNE", 10, 10);
+      const subjects = document.querySelectorAll(".subject");
+      let y = 20;
+      subjects.forEach((s, i) => {
+        const text = s.textContent.trim().split("\n")[0];
+        const estado = s.classList.contains("aprobada") ? "(Aprobada)" :
+                       s.classList.contains("regularizada") ? "(Regularizada)" : "";
+        doc.text(`- ${text} ${estado}`, 10, y);
+        y += 7;
+      });
+      doc.save("malla-economia-unne.pdf");
+    }
+
+    renderMalla();
+    loadProgress();
+  </script>
+</body>
+</html>
